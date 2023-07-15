@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="tetris.css">
+<body>
+    <button onclick="StartGame()">スタート</button>
+    <button onclick="AllReset()">リセット</button>
+    <select name="SpeedSelect" id="SpeedSelect" onchange="SpeedChange(event)">
+        <option value="slow">slow</option>
+        <option value="middle">middle</option>
+        <option value="fast">fast</option>
+    </select>
+    <br>
+    <canvas id = "Tetris" width="1200" height="700"></canvas>
+
+    <script src="tetris.js"></script>
+
+    <p class="Description">移動:矢印キー 回転:Z or X リセット:R</p>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

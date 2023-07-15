@@ -12,8 +12,9 @@ const KEY_X = 88 //左回転
 const KEY_R = 82 //リセット
 let GAMESTART_FLAG = false
 let GAMEOVER_FLAG = false
+let GAMECLEAR_FLAG = false
 let speed = 500
-
+let score = 0
 
 let canvas = document.getElementById('Tetris')
 let context = canvas.getContext('2d')
@@ -165,6 +166,7 @@ function SetBlock () {
 //ラインを消す
 function ClearLine () {
   let count = 0
+  let scorecount = 0 //一度で何段消えたかを計算
   for (let i = 0; i < HEIGHT_BLOCK; i++) {
     for (let j = 0; j < WIDTH_BLOCK; j++) {
       if (stage_block_info[i][j] == 2) {
@@ -177,9 +179,17 @@ function ClearLine () {
       for (let j = 0; j < WIDTH_BLOCK; j++) {
         stage_block_info[0][j] = 0
       }
+      scorecount++
     }
     count = 0
   }
+  if (scorecount == 4) {
+    //テトリス時ボーナス
+    score += 8000
+  } else {
+    score += scorecount * 1000 //それ以外は段数*1000
+  }
+  scorecount = 0 //リセット
 }
 
 //他ブロック衝突処理(もしも他のブロックと被っていたらfalse、被っていなかったらtrue
@@ -258,8 +268,9 @@ function handleKeyDown (event) {
   if (keycode == KEY_R) {
     AllReset()
     GAMESTART_FLAG = true
+    score = 0
   }
-  if (GAMEOVER_FLAG == true || GAMESTART_FLAG == false) {
+  if (GAMEOVER_FLAG == true || GAMESTART_FLAG == false || GAMECLEAR_FLAG == true) {
     return
   }
 
@@ -309,7 +320,7 @@ function handleKeyDown (event) {
   AddCurBlock() //stage情報を更新
 }
 
-function StartGame(){
+function StartGame () {
   GAMESTART_FLAG = true
 }
 
@@ -326,28 +337,30 @@ function AllReset () {
   AddCurBlock()
   GAMEOVER_FLAG = false
   GAMESTART_FLAG = false
+  GAMECLEAR_FLAG = false
+  score = 0
 }
 
 //速度調整
-function SpeedChange(event){
+function SpeedChange (event) {
   speed = event.target.value
-  switch(speed){
-    case "slow":
-      speed =500
-      break;
-    case "middle":
+  switch (speed) {
+    case 'slow':
+      speed = 500
+      break
+    case 'middle':
       speed = 250
-      break;
-    case "fast":
+      break
+    case 'fast':
       speed = 125
-      break;
+      break
     default:
       speed = 500
   }
   //タイマーをリセット
   clearInterval(intervalID)
   //新たにタイマーを設定
-  intervalID = setInterval(IntervalHandle , speed)
+  intervalID = setInterval(IntervalHandle, speed)
 }
 
 //壁ブロックの描画
@@ -435,6 +448,24 @@ function DrawBlock () {
   }
 }
 
+function DrawScore () {
+  if (score >= 50000) {
+    GAMECLEAR_FLAG = true
+  }
+  context.fillStyle = 'black'
+  context.font = '20px Arial'
+  context.fillText(
+    'SCORE: ' + score + '点',
+    START_POS_X + BLOCK_SIZE * (WIDTH_BLOCK + 3),
+    START_POS_Y + BLOCK_SIZE
+  )
+  context.fillText(
+    'CLEAR: 50000点',
+    START_POS_X + BLOCK_SIZE * (WIDTH_BLOCK + 3),
+    START_POS_Y + BLOCK_SIZE + 30
+  )
+}
+
 function DrawGameOver () {
   context.fillStyle = 'black'
   context.font = '50px Arial'
@@ -444,14 +475,26 @@ function DrawGameOver () {
     START_POS_Y + (BLOCK_SIZE * HEIGHT_BLOCK) / 2
   )
 }
+function DrawGameClear () {
+  // const gradient = context.createLinearGradient(0, 0, canvas.width, 0)
+  // gradient.addColorStop(0, 'red')
+  // gradient.addColorStop(1, 'blue')
+  context.fillStyle = 'red'
+  context.font = '45px Arial'
+  context.fillText(
+    'GAME CLEAR',
+    START_POS_X + BLOCK_SIZE,
+    START_POS_Y + (BLOCK_SIZE * HEIGHT_BLOCK) / 2
+  )
+}
 
-function IntervalHandle(){
-  if(GAMESTART_FLAG == false || GAMEOVER_FLAG == true){
+function IntervalHandle () {
+  if (GAMESTART_FLAG == false || GAMEOVER_FLAG == true || GAMECLEAR_FLAG) {
     return
   }
   ShiftDownBlock()
 }
-let intervalID = setInterval(IntervalHandle , speed)
+let intervalID = setInterval(IntervalHandle, speed)
 
 setInterval(function () {
   context.clearRect(
@@ -460,12 +503,22 @@ setInterval(function () {
     WIDTH_BLOCK * BLOCK_SIZE,
     (HEIGHT_BLOCK + 1) * BLOCK_SIZE
   )
+  context.clearRect(
+    START_POS_X + BLOCK_SIZE * (WIDTH_BLOCK + 3),
+    START_POS_Y,
+    WIDTH_BLOCK * 20,
+    (HEIGHT_BLOCK + 1) * 6
+  )
   //ゲームスタート前なら描画しない
-  if(GAMESTART_FLAG == false){
+  if (GAMESTART_FLAG == false) {
     return
   }
   DrawBlock()
+  DrawScore()
   if (GAMEOVER_FLAG == true) {
     DrawGameOver()
+  }
+  if(GAMECLEAR_FLAG == true){
+    DrawGameClear()
   }
 }, 10)
